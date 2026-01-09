@@ -28,14 +28,12 @@ pipeline {
 
         stage('Build Backend Docker Image') {
             steps {
-                dir('backend') {
-                    sh '''
-                    docker build \
-                      -f ../Dockerfile \
-                      -t $BACKEND_IMAGE:latest \
-                      .
-                    '''
-                }
+                sh '''
+                docker build \
+                  -f Dockerfile \
+                  -t $BACKEND_IMAGE:latest \
+                  .
+                '''
             }
         }
 
