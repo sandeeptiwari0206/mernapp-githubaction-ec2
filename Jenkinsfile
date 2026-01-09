@@ -26,8 +26,9 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                dir('backend') {
-                    bat 'docker build -t %BACKEND_IMAGE% .'
+                // Build backend from root since Dockerfile is at root
+                dir('.') {
+                    bat 'docker build -f Dockerfile -t %BACKEND_IMAGE% .'
                 }
             }
         }
