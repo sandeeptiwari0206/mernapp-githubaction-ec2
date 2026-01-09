@@ -26,10 +26,8 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                // Build backend from root since Dockerfile is at root
-                dir('.') {
-                    bat 'docker build -f Dockerfile -t %BACKEND_IMAGE% .'
-                }
+                // Dockerfile is at root
+                bat 'docker build -t %BACKEND_IMAGE% .'
             }
         }
 
@@ -45,7 +43,7 @@ pipeline {
             }
         }
 
-        stage('Push Images') {
+        stage('Push Images to Docker Hub') {
             steps {
                 bat """
                   docker push %FRONTEND_IMAGE%
@@ -53,41 +51,14 @@ pipeline {
                 """
             }
         }
-
-        stage('Deploy Containers') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'mongo-uri', variable: 'MONGO_URI'),
-                    string(credentialsId: 'jwt-secret', variable: 'JWT_SECRET')
-                ]) {
-                    bat """
-                    docker rm -f frontend backend || exit 0
-
-                    docker run -d ^
-                      --name backend ^
-                      -p 5000:5000 ^
-                      -e NODE_ENV=development ^
-                      -e PORT=5000 ^
-                      -e MONGO_URI=%MONGO_URI% ^
-                      -e JWT_SECRET=%JWT_SECRET% ^
-                      %BACKEND_IMAGE%
-
-                    docker run -d ^
-                      --name frontend ^
-                      -p 3000:3000 ^
-                      %FRONTEND_IMAGE%
-                    """
-                }
-            }
-        }
     }
 
     post {
         success {
-            echo "✅ MERN pipeline deployed successfully on Windows Docker!"
+            echo "✅ CI Pipeline successful: Images built & pushed to Docker Hub!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins logs."
+            echo "❌ CI Pipeline failed. Check Jenkins logs."
         }
     }
 }
