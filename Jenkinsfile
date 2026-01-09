@@ -65,9 +65,9 @@ pipeline {
 
                     docker run -d ^
                       --name backend ^
-                      -p 5005:5005 ^
+                      -p 5000:5000 ^
                       -e NODE_ENV=development ^
-                      -e PORT=5005 ^
+                      -e PORT=5000 ^
                       -e MONGO_URI=%MONGO_URI% ^
                       -e JWT_SECRET=%JWT_SECRET% ^
                       %BACKEND_IMAGE%
