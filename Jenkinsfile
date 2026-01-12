@@ -2,15 +2,18 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_TAG      = "${BUILD_NUMBER}"
-        FRONTEND_IMAGE = "sandeeptiwari0206/mern-frontend"
-        BACKEND_IMAGE  = "sandeeptiwari0206/mern-backend"
-        DOCKER_CREDS   = "dockerhub-creds"
+        IMAGE_TAG       = "${BUILD_NUMBER}"
+        FRONTEND_IMAGE  = "sandeeptiwari0206/mern-frontend"
+        BACKEND_IMAGE   = "sandeeptiwari0206/mern-backend"
+        DOCKER_CREDS    = "dockerhub-creds"
         DOCKER_BUILDKIT = "1"
     }
 
     stages {
 
+        /* ==========================
+           CHECKOUT
+        =========================== */
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -19,7 +22,7 @@ pipeline {
         }
 
         /* ==========================
-           SONARQUBE (PARALLEL)
+           SONARQUBE (PARALLEL + FIXED)
         =========================== */
         stage('SonarQube Analysis') {
             parallel {
@@ -28,10 +31,12 @@ pipeline {
                     steps {
                         dir('frontend') {
                             withSonarQubeEnv('sonarqube') {
-                                script {
-                                    def scannerHome = tool 'SonarScanner'
-                                    bat "${scannerHome}\\bin\\sonar-scanner.bat"
-                                }
+                                bat """
+                                sonar-scanner ^
+                                  -Dsonar.projectKey=mern-frontend ^
+                                  -Dsonar.projectBaseDir=. ^
+                                  -Dsonar.workDir=.scannerwork-frontend
+                                """
                             }
                         }
                     }
@@ -40,10 +45,11 @@ pipeline {
                 stage('Backend Scan') {
                     steps {
                         withSonarQubeEnv('sonarqube') {
-                            script {
-                                def scannerHome = tool 'SonarScanner'
-                                bat "${scannerHome}\\bin\\sonar-scanner.bat"
-                            }
+                            bat """
+                            sonar-scanner ^
+                              -Dsonar.projectKey=mern-backend ^
+                              -Dsonar.workDir=.scannerwork-backend
+                            """
                         }
                     }
                 }
@@ -165,10 +171,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ Optimized MERN pipeline executed successfully!"
+            echo "✅ MERN pipeline completed successfully (optimized & stable)"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins or SonarQube logs."
+            echo "❌ Pipeline failed. Check Jenkins / SonarQube logs."
         }
     }
 }
