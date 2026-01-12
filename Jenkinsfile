@@ -2,18 +2,14 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_TAG       = "${BUILD_NUMBER}"
-        FRONTEND_IMAGE  = "sandeeptiwari0206/mern-frontend"
-        BACKEND_IMAGE   = "sandeeptiwari0206/mern-backend"
-        DOCKER_CREDS    = "dockerhub-creds"
-        DOCKER_BUILDKIT = "1"
+        IMAGE_TAG      = "${BUILD_NUMBER}"
+        FRONTEND_IMAGE = "sandeeptiwari0206/mern-frontend"
+        BACKEND_IMAGE  = "sandeeptiwari0206/mern-backend"
+        DOCKER_CREDS   = "dockerhub-creds"
     }
 
     stages {
 
-        /* ==========================
-           CHECKOUT
-        =========================== */
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
@@ -21,80 +17,60 @@ pipeline {
             }
         }
 
-        /* ==========================
-           SONARQUBE (PARALLEL + FIXED)
-        =========================== */
-       stage('SonarQube Analysis') {
-    parallel {
-
-        stage('Frontend Scan') {
+        stage('SonarQube Analysis - Frontend') {
             steps {
                 dir('frontend') {
                     withSonarQubeEnv('sonarqube') {
                         script {
                             def scannerHome = tool 'SonarScanner'
-                            bat """
-                            "${scannerHome}\\bin\\sonar-scanner.bat" ^
-                              -Dsonar.projectKey=mern-frontend ^
-                              -Dsonar.projectBaseDir=. ^
-                              -Dsonar.workDir=.scannerwork-frontend
-                            """
+                            bat "${scannerHome}\\bin\\sonar-scanner.bat"
                         }
                     }
                 }
             }
         }
 
-        stage('Backend Scan') {
+        stage('SonarQube Analysis - Backend') {
             steps {
                 withSonarQubeEnv('sonarqube') {
                     script {
                         def scannerHome = tool 'SonarScanner'
-                        bat """
-                        "${scannerHome}\\bin\\sonar-scanner.bat" ^
-                          -Dsonar.projectKey=mern-backend ^
-                          -Dsonar.workDir=.scannerwork-backend
-                        """
-                    }
-                }
-            }
-        }
-    }
-}
-
-        /* ==========================
-           BUILD IMAGES (PARALLEL)
-        =========================== */
-        stage('Build Docker Images') {
-            parallel {
-
-                stage('Build Frontend Image') {
-                    steps {
-                        dir('frontend') {
-                            bat """
-                            docker build ^
-                              -t %FRONTEND_IMAGE%:%IMAGE_TAG% ^
-                              -t %FRONTEND_IMAGE%:latest .
-                            """
-                        }
-                    }
-                }
-
-                stage('Build Backend Image') {
-                    steps {
-                        bat """
-                        docker build ^
-                          -t %BACKEND_IMAGE%:%IMAGE_TAG% ^
-                          -t %BACKEND_IMAGE%:latest .
-                        """
+                        bat "${scannerHome}\\bin\\sonar-scanner.bat"
                     }
                 }
             }
         }
 
-        /* ==========================
-           DOCKER HUB LOGIN
-        =========================== */
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Build Frontend Image') {
+            steps {
+                dir('frontend') {
+                    bat """
+                    docker build ^
+                      -t %FRONTEND_IMAGE%:%IMAGE_TAG% ^
+                      -t %FRONTEND_IMAGE%:latest .
+                    """
+                }
+            }
+        }
+
+        stage('Build Backend Image') {
+            steps {
+                bat """
+                docker build ^
+                  -t %BACKEND_IMAGE%:%IMAGE_TAG% ^
+                  -t %BACKEND_IMAGE%:latest .
+                """
+            }
+        }
+
         stage('Docker Hub Login') {
             steps {
                 withCredentials([usernamePassword(
@@ -107,46 +83,18 @@ pipeline {
             }
         }
 
-        /* ==========================
-           PUSH IMAGES (PARALLEL)
-        =========================== */
         stage('Push Images') {
-            parallel {
-
-                stage('Push Frontend') {
-                    steps {
-                        bat """
-                        docker push %FRONTEND_IMAGE%:%IMAGE_TAG%
-                        docker push %FRONTEND_IMAGE%:latest
-                        """
-                    }
-                }
-
-                stage('Push Backend') {
-                    steps {
-                        bat """
-                        docker push %BACKEND_IMAGE%:%IMAGE_TAG%
-                        docker push %BACKEND_IMAGE%:latest
-                        """
-                    }
-                }
-            }
-        }
-
-        /* ==========================
-           QUALITY GATE
-        =========================== */
-        stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {
-                    waitForQualityGate abortPipeline: true
-                }
+                bat """
+                docker push %FRONTEND_IMAGE%:%IMAGE_TAG%
+                docker push %FRONTEND_IMAGE%:latest
+
+                docker push %BACKEND_IMAGE%:%IMAGE_TAG%
+                docker push %BACKEND_IMAGE%:latest
+                """
             }
         }
 
-        /* ==========================
-           DEPLOY
-        =========================== */
         stage('Deploy Containers') {
             steps {
                 withCredentials([
@@ -177,10 +125,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ MERN pipeline completed successfully (optimized & stable)"
+            echo "✅ Versioned MERN images deployed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins / SonarQube logs."
+            echo "❌ Pipeline failed. Check Jenkins & SonarQube logs."
         }
     }
 }
