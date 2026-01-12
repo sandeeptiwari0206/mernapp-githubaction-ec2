@@ -116,7 +116,7 @@ pipeline {
             echo "✅ MERN pipeline with SonarQube deployed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins & SonarQube logs."
+            echo "❌ Pipeline failed. Check Jenkins & SonarQube logs. Thanks."
         }
     }
 }
