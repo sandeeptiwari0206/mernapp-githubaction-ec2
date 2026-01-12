@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    tools {
+        sonarQube 'sonar-scanner'
+    }
+
     environment {
         FRONTEND_IMAGE = "sandeeptiwari0206/mern-frontend"
         BACKEND_IMAGE  = "sandeeptiwari0206/mern-backend"
@@ -16,6 +20,32 @@ pipeline {
             }
         }
 
+        stage('SonarQube Analysis - Frontend') {
+            steps {
+                dir('frontend') {
+                    withSonarQubeEnv('sonarqube') {
+                        bat 'sonar-scanner'
+                    }
+                }
+            }
+        }
+
+        stage('SonarQube Analysis - Backend') {
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    bat 'sonar-scanner'
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
         stage('Build Frontend Image') {
             steps {
                 dir('frontend') {
@@ -26,10 +56,7 @@ pipeline {
 
         stage('Build Backend Image') {
             steps {
-                // Build backend from root since Dockerfile is at root
-                dir('.') {
-                    bat 'docker build -f Dockerfile -t %BACKEND_IMAGE% .'
-                }
+                bat 'docker build -f Dockerfile -t %BACKEND_IMAGE% .'
             }
         }
 
@@ -84,10 +111,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ MERN pipeline deployed successfully on Windows Docker!"
+            echo "✅ MERN pipeline with SonarQube deployed successfully!"
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins logs."
+            echo "❌ Pipeline failed. Check Jenkins & SonarQube logs."
         }
     }
 }
