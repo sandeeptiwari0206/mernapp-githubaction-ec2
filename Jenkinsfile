@@ -20,7 +20,10 @@ pipeline {
             steps {
                 dir('frontend') {
                     withSonarQubeEnv('sonarqube') {
-                        bat 'sonar-scanner'
+                        script {
+                            def scannerHome = tool 'SonarScanner'
+                            bat "${scannerHome}\\bin\\sonar-scanner.bat"
+                        }
                     }
                 }
             }
@@ -29,7 +32,10 @@ pipeline {
         stage('SonarQube Analysis - Backend') {
             steps {
                 withSonarQubeEnv('sonarqube') {
-                    bat 'sonar-scanner'
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        bat "${scannerHome}\\bin\\sonar-scanner.bat"
+                    }
                 }
             }
         }
