@@ -14,7 +14,7 @@ pipeline {
            ======================= */
 
         stage('CI - Checkout, Sonar, Build & Push') {
-            agent { label 'windows' }
+            agent { label 'master' }
 
             stages {
 
@@ -87,7 +87,7 @@ pipeline {
            ======================= */
 
         stage('CD - Deploy on EC2') {
-            agent { label 'ec2-node' }
+            agent { label 'slave' }
 
             steps {
                 withCredentials([
