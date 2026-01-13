@@ -84,8 +84,8 @@ pipeline {
         stage('Push Images') {
             steps {
                 bat """
-                docker push %FRONTEND_IMAGE%:%IMAGE_TAG%
-                docker push %BACKEND_IMAGE%:%IMAGE_TAG%
+                docker push --quiet %FRONTEND_IMAGE%:%IMAGE_TAG%
+                docker push --quiet %BACKEND_IMAGE%:%IMAGE_TAG%
                 """
             }
         }
