@@ -54,8 +54,7 @@ pipeline {
                 dir('frontend') {
                     bat """
                     docker build ^
-                      -t %FRONTEND_IMAGE%:%IMAGE_TAG% ^
-                      -t %FRONTEND_IMAGE%:latest .
+                      -t %FRONTEND_IMAGE%:%IMAGE_TAG% .
                     """
                 }
             }
@@ -65,8 +64,7 @@ pipeline {
             steps {
                 bat """
                 docker build ^
-                  -t %BACKEND_IMAGE%:%IMAGE_TAG% ^
-                  -t %BACKEND_IMAGE%:latest .
+                  -t %BACKEND_IMAGE%:%IMAGE_TAG% .
                 """
             }
         }
@@ -87,10 +85,7 @@ pipeline {
             steps {
                 bat """
                 docker push %FRONTEND_IMAGE%:%IMAGE_TAG%
-                docker push %FRONTEND_IMAGE%:latest
-
                 docker push %BACKEND_IMAGE%:%IMAGE_TAG%
-                docker push %BACKEND_IMAGE%:latest
                 """
             }
         }
@@ -127,10 +122,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ CI/CD completed successfully. App deployed on Linux EC2!"
+            echo "✅ CI/CD completed successfully. Versioned images deployed to EC2."
         }
         failure {
-            echo "❌ Pipeline failed. Check Jenkins or SonarQube logs."
+            echo "❌ Pipeline failed. Check Jenkins & SonarQube logs."
         }
     }
 }
