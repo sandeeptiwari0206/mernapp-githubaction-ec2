@@ -14,7 +14,7 @@ pipeline {
            ======================= */
 
         stage('CI - Checkout, Sonar, Build & Push') {
-            agent { label 'windows' }
+            agent { label 'master' }
 
             stages {
 
