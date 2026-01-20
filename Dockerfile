@@ -16,7 +16,7 @@ COPY . .
 EXPOSE 5000
 
 # Set NODE_ENV explicitly
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 
 # Start backend
 CMD ["node", "backend/server.js"]
