@@ -60,7 +60,7 @@ jobs:
           docker run -d \
             --name mern-backend-action \
             -p 5000:5000 \
-            -e NODE_ENV=production \
+            -e NODE_ENV=development \
             -e MONGO_URI="${{ secrets.MONGO_URI }}" \
             -e JWT_SECRET="${{ secrets.JWT_SECRET }}" \
             sandeeptiwari0206/mern-backend:$SHORT_SHA
